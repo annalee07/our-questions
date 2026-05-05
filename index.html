@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Questions</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Jost&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --black:#111;
+  --page:#f8f8f6;
+  --muted:#888;
+}
+
+body {
+  margin:0;
+  font-family:'Jost',sans-serif;
+  background:var(--page);
+}
+
+.topbar {
+  background:var(--black);
+  color:white;
+  padding:16px;
+  font-family:'Playfair Display',serif;
+}
+
+main {
+  padding:20px;
+  max-width:700px;
+  margin:auto;
+}
+
+.question {
+  font-family:'Playfair Display',serif;
+  font-size:26px;
+  margin:40px 0;
+}
+
+button {
+  padding:12px 18px;
+  background:var(--black);
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+.history {
+  margin-top:40px;
+  font-size:14px;
+  color:#444;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">Our Questions</div>
+
+<main>
+  <div class="question" id="q">Loading...</div>
+  <button onclick="draw()">Draw Question</button>
+
+  <div class="history" id="history"></div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3AzRs1zZb4vf8gSwvqV9akPBmcY2sbk",
+  authDomain: "our-questions.firebaseapp.com",
+  projectId: "our-questions"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const ref = doc(db, "state", "main");
+
+const QUESTIONS = [
+"Do I want my future children to behave the way my partner does?",
+"Do I think this person will be a good parent to my children?",
+"How important is faith to you?",
+"What are your financial goals?",
+"What does marriage mean to you?",
+"What are your biggest needs in a relationship?"
+];
+
+let done = [];
+
+onSnapshot(ref, snap=>{
+  if(!snap.exists()) return;
+  done = snap.data().done || [];
+  renderHistory();
+});
+
+async function save(){
+  await setDoc(ref,{done});
+}
+
+function draw(){
+  const remaining = QUESTIONS.filter(q=>!done.includes(q));
+  if(remaining.length===0){
+    document.getElementById("q").textContent="All done!";
+    return;
+  }
+  const pick = remaining[Math.floor(Math.random()*remaining.length)];
+  document.getElementById("q").textContent = pick;
+  done.push(pick);
+  save();
+}
+
+function renderHistory(){
+  document.getElementById("history").innerHTML =
+    "<b>Discussed:</b><br>"+done.join("<br>");
+}
+
+</script>
+
+</body>
+</html>
